@@ -9,6 +9,7 @@ import de.malax.chip8.operations.MachineOperations.{readRegister, _}
 import de.malax.chip8.utils.Bcd
 
 object OpcodeToMachineOperationMapper {
+  implicit def bool2int(b: Boolean) = if (b) 1 else 0
 
   def map(opcode: Opcode): MachineOperation[Unit] = {
     val m = Monad[MachineOperation]
@@ -42,7 +43,7 @@ object OpcodeToMachineOperationMapper {
         withIncrementedPc(writeRegister(r, byte))
 
       case AddConstant(r, byte) =>
-        withIncrementedPc(readRegister(r).map(_ + byte).flatMap(writeRegister(r, _)))
+        withIncrementedPc(readRegister(r).map(_ + byte % 0xFF).flatMap(writeRegister(r, _)))
 
       case LoadRegister(rA, rB) =>
         withIncrementedPc(readRegister(rA).flatMap(writeRegister(rB, _)))
@@ -64,29 +65,36 @@ object OpcodeToMachineOperationMapper {
 
       case AddRegister(rA, rB) =>
         withIncrementedPc(readRegisters(rA, rB) { (a, b) =>
-          writeRegister(rA, a + b)
+          for {
+            _ <- writeRegister(rA, (a + b) & 0xFF)
+            _ <- writeRegister(VF, (a + b) > 0xFF)
+          } yield ()
         })
 
       case SubtractRegister(rA, rB) =>
         withIncrementedPc(readRegisters(rA, rB) { (a, b) =>
-          writeRegister(rA, a - b)
+          val borrow = b > a
+          for {
+            _ <- writeRegister(rA, a - b & 0xFF)
+            _ <- writeRegister(VF, !borrow)
+          } yield ()
         })
 
-      case ShiftLeft(r) =>
+      case ShiftLeft(rA, rB) =>
         withIncrementedPc(
           for {
-            v <- readRegister(r)
-            _ <- writeRegister(VF, if ((v & 0x80) == 0x80) 1 else 0)
-            _ <- writeRegister(r, (v << 1) & 0xFF)
+            vB <- readRegister(rB)
+            _ <- writeRegister(VF, if ((vB & 0x80) == 0x80) 1 else 0)
+            _ <- writeRegister(rA, (vB << 1) & 0xFF)
           } yield ()
         )
 
-      case ShiftRight(r) =>
+      case ShiftRight(rA, rB) =>
         withIncrementedPc(
           for {
-            v <- readRegister(r)
-            _ <- writeRegister(VF, v & 0x1)
-            _ <- writeRegister(r, v >> 1)
+            vB <- readRegister(rB)
+            _ <- writeRegister(VF, vB & 0x1)
+            _ <- writeRegister(rA, vB >> 1)
           } yield ()
         )
 

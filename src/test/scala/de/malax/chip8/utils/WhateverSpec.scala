@@ -1,6 +1,6 @@
 package de.malax.chip8.utils
 
-import de.malax.chip8.{VA, VB}
+import de.malax.chip8.{VA, VB, VF}
 import de.malax.chip8.compilers.pure.{Machine, PureCompiler}
 import de.malax.chip8.opcode._
 import de.malax.chip8.operations.MachineOperation
@@ -46,6 +46,48 @@ class WhateverSpec extends FlatSpec with Matchers {
     val (m, _) = execute(OpcodeToMachineOperationMapper.map(SkipIfEqual(VB, 0xFF)), machineState)
 
     m should be (machineState.copy(pc = 0x224))
+  }
+
+  it should "execute AddRegister with overflow correctly" in {
+    val machine = Machine.initial.withRegisterValue(VA, 0xAA).withRegisterValue(VB, 0xAA)
+    val (m, _) = execute(OpcodeToMachineOperationMapper.map(AddRegister(VA, VB)), machine)
+    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x54).withRegisterValue(VF, 0x01))
+  }
+
+  it should "execute AddRegister without overflow correctly" in {
+    val machine = Machine.initial.withRegisterValue(VA, 0x0A).withRegisterValue(VB, 0x01)
+    val (m, _) = execute(OpcodeToMachineOperationMapper.map(AddRegister(VA, VB)), machine)
+    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x0B).withRegisterValue(VF, 0x00))
+  }
+
+  it should "execute AddConstant with overflow correctly" in {
+    val machine = Machine.initial.withRegisterValue(VA, 0x0A)
+    val (m, _) = execute(OpcodeToMachineOperationMapper.map(AddConstant(VA, 0xFF)), machine)
+    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x0A))
+  }
+
+  it should "execute AddConstant without overflow correctly" in {
+    val machine = Machine.initial.withRegisterValue(VA, 0x0A)
+    val (m, _) = execute(OpcodeToMachineOperationMapper.map(AddConstant(VA, 0x02)), machine)
+    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x0C))
+  }
+
+  it should "execute AddConstant without borrow correctly" in {
+    val machine = Machine.initial.withRegisterValue(VA, 0x0A).withRegisterValue(VB, 0x01)
+    val (m, _) = execute(OpcodeToMachineOperationMapper.map(SubtractRegister(VA, VB)), machine)
+    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x09).withRegisterValue(VF, 0x01))
+  }
+
+  it should "execute ShiftLeft correctly" in {
+    val machine = Machine.initial.withRegisterValue(VA, 0x00).withRegisterValue(VB, 0xFF)
+    val (m, _) = execute(OpcodeToMachineOperationMapper.map(ShiftLeft(VA, VB)), machine)
+    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0xFE).withRegisterValue(VF, 0x01))
+  }
+
+  it should "execute RightLeft correctly" in {
+    val machine = Machine.initial.withRegisterValue(VA, 0x00).withRegisterValue(VB, 0xFF)
+    val (m, _) = execute(OpcodeToMachineOperationMapper.map(ShiftRight(VA, VB)), machine)
+    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x7F).withRegisterValue(VF, 0x01))
   }
 
   private def execute[A](p: MachineOperation[A], m: Machine): (Machine, A) = {

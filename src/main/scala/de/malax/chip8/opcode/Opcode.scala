@@ -19,9 +19,9 @@ case class AndRegister(registerA: Register, registerB: Register) extends Opcode
 case class XorRegister(registerA: Register, registerB: Register) extends Opcode
 case class AddRegister(registerA: Register, registerB: Register) extends Opcode
 case class SubtractRegister(registerA: Register, registerB: Register) extends Opcode
-case class ShiftRight(register: Register) extends Opcode
+case class ShiftRight(rA: Register, rB: Register) extends Opcode
 case class SubN(registerA: Register, registerB: Register) extends Opcode
-case class ShiftLeft(register: Register) extends Opcode
+case class ShiftLeft(aA: Register, rB: Register) extends Opcode
 case class SkipIfNotEqualRegister(registerA: Register, registerB: Register) extends Opcode
 case class LoadIRegister(byte: Int) extends Opcode
 case class JumpToAddressOffsettedByVa(address: Int) extends Opcode

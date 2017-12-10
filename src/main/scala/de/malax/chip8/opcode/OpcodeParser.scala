@@ -1,7 +1,6 @@
 package de.malax.chip8.opcode
 
 import de.malax.chip8.Register
-import de.malax.machine._
 
 object OpcodeParser {
   def parse(opcode: Int): Option[Opcode] = {

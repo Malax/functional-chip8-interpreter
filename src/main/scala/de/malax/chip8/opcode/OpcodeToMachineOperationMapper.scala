@@ -102,7 +102,7 @@ object OpcodeToMachineOperationMapper {
         withIncrementedPc(readRegisters(rA, rB) { (a, b) =>
           for {
             _ <- writeRegister(VF, if (a > b) 1 else 0)
-            _ <- writeRegister(rA, b - a)
+            _ <- writeRegister(rA, (b - a) & 0xFF)
           } yield ()
         })
 

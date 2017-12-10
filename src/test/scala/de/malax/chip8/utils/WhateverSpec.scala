@@ -49,9 +49,9 @@ class WhateverSpec extends FlatSpec with Matchers {
   }
 
   it should "execute AddRegister with overflow correctly" in {
-    val machine = Machine.initial.withRegisterValue(VA, 0xAA).withRegisterValue(VB, 0xAA)
+    val machine = Machine.initial.withRegisterValue(VA, 0x3E).withRegisterValue(VB, 0xFF)
     val (m, _) = execute(OpcodeToMachineOperationMapper.map(AddRegister(VA, VB)), machine)
-    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x54).withRegisterValue(VF, 0x01))
+    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x3D).withRegisterValue(VF, 0x01))
   }
 
   it should "execute AddRegister without overflow correctly" in {
@@ -72,10 +72,10 @@ class WhateverSpec extends FlatSpec with Matchers {
     m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x0C))
   }
 
-  it should "execute AddConstant without borrow correctly" in {
-    val machine = Machine.initial.withRegisterValue(VA, 0x0A).withRegisterValue(VB, 0x01)
+  it should "execute SubtractRegister with borrow correctly" in {
+    val machine = Machine.initial.withRegisterValue(VA, 0x01).withRegisterValue(VB, 0x02)
     val (m, _) = execute(OpcodeToMachineOperationMapper.map(SubtractRegister(VA, VB)), machine)
-    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0x09).withRegisterValue(VF, 0x01))
+    m should be (machine.copy(pc = machine.pc + 2).withRegisterValue(VA, 0xFF).withRegisterValue(VF, 0x00))
   }
 
   it should "execute ShiftLeft correctly" in {

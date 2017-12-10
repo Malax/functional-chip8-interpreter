@@ -83,11 +83,17 @@ object SwingGuiCompiler {
       timerAcc = timerAcc + timePassed
 
       val dTValue = registers(DT)
+      val sTValue = registers(ST)
       if (timerAcc > 1000 / 60) {
         timerAcc = timerAcc - (1000 / 60)
 
         if (dTValue > 0) {
           registers.update(DT, dTValue - 1)
+        }
+
+        if (sTValue > 0) {
+          registers.update(ST, sTValue - 1)
+          println("BEEP")
         }
       }
 
